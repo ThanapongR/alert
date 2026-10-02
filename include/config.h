@@ -29,7 +29,7 @@
 // Dual-stage State Machine & Gating Parameters
 // ==========================================
 #define CONFIDENCE_THRESHOLD         0.90f
-#define MIN_ALARM_RMS_THRESHOLD      400.0f // Filter human whistling/casual sounds, accept true siren SPL
+#define MIN_ALARM_RMS_THRESHOLD      300.0f // Optimal sensitivity for test speakers and real alarms
 #define SUSPECTED_WINDOW_MS          16000  // 16 seconds window to allow hits across 2-3 T3 cycles
 #define REQUIRED_HITS_FOR_ALERT      12     // 12 additional hits while suspected (total 13 hits)
 #define REQUIRED_T3_CYCLES           2      // Minimum verified T3 cycles (triplet + 1.5s silence) for Alert
