@@ -1,0 +1,3 @@
+# 3. 16kHz MFE Audio Pipeline with PlatformIO Build System
+
+For acoustic feature extraction and firmware architecture, we selected a 16 kHz sampling rate (1,000 ms window / 250 ms slide) processed through Mel-Filterbank Energy (MFE), built via PlatformIO using the Arduino framework on ESP32-S3. A 16 kHz rate covers the 3 kHz fundamental and key harmonics of ISO 8201 T3 smoke alarms within Nyquist limits while keeping I2S DMA memory under 40 KB. MFE preserves tonal peak resolution better than voice-oriented MFCCs, and PlatformIO provides reproducible dependency management for the Edge Impulse C++ static inference library.

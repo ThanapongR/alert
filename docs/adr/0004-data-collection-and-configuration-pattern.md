@@ -1,0 +1,3 @@
+# 4. In-situ Acoustic Data Collection and Compile-time Configuration
+
+We chose to record ambient training data directly through the target hardware (XIAO ESP32-S3 + INMP441 via Edge Impulse Data Forwarder CLI) and manage network credentials via compile-time `secrets.h`. Training on audio captured by the exact microphone hardware preserves microphone-specific frequency response and noise floor characteristics, preventing false alarms from domestic noise. Using compile-time credentials eliminates the RAM, Flash, and boot-time overhead of runtime captive portals, reserving memory for I2S DMA buffers and neural network inference.
