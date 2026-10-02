@@ -1,0 +1,26 @@
+{
+  "name": "edge_impulse",
+  "version": "1.0.0",
+  "build": {
+    "flags": [
+      "-I.",
+      "-Iedge-impulse-sdk",
+      "-Imodel-parameters",
+      "-Itflite-model",
+      "-Iedge-impulse-sdk/porting/espressif/ESP-NN/include",
+      "-DEI_PORTING_ARDUINO=1"
+    ],
+    "srcFilter": [
+      "+<edge-impulse-sdk/dsp/**/*.cpp>",
+      "+<edge-impulse-sdk/classifier/**/*.cpp>",
+      "+<edge-impulse-sdk/tensorflow/**/*.cpp>",
+      "+<edge-impulse-sdk/tensorflow/**/*.cc>",
+      "+<edge-impulse-sdk/tensorflow/**/*.c>",
+      "+<edge-impulse-sdk/porting/arduino/**/*.cpp>",
+      "+<edge-impulse-sdk/porting/espressif/**/*.cpp>",
+      "+<edge-impulse-sdk/porting/espressif/ESP-NN/src/**/*.c>",
+      "+<edge-impulse-sdk/porting/espressif/ESP-NN/src/**/*.S>",
+      "+<tflite-model/**/*.cpp>"
+    ]
+  }
+}

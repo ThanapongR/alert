@@ -16,10 +16,8 @@
 static int32_t raw_i2s_buffer[DMA_BUFFER_SAMPLES];
 
 #if HAS_EDGE_IMPULSE
-// Continuous inference structures
-static inference_t inference;
 static signed short *sample_buffer = nullptr;
-static bool record_status = true;
+static size_t sample_buffer_idx = 0;
 
 static int audio_signal_get_data(size_t offset, size_t length, float *out_ptr) {
     numpy::int16_to_float(&sample_buffer[offset], out_ptr, length);
