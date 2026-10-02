@@ -9,3 +9,6 @@
 
 # Sensitive configurations
 include/secrets.h
+
+# Archives
+*.zip

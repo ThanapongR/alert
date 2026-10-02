@@ -29,9 +29,9 @@
 // Dual-stage State Machine & Gating Parameters
 // ==========================================
 #define CONFIDENCE_THRESHOLD         0.85f
-#define MIN_ALARM_RMS_THRESHOLD      350.0f // Rejects low-energy noise (<350 RMS); accepts alarms (>350 RMS)
-#define SUSPECTED_WINDOW_MS          8000   // 8 seconds window to fit 5 hits across 2 T3 cycles
-#define REQUIRED_HITS_FOR_ALERT      4      // 4 additional hits while suspected (total 5 hits)
+#define MIN_ALARM_RMS_THRESHOLD      250.0f // Lower RMS for higher sensitivity to distant/quiet alarms
+#define SUSPECTED_WINDOW_MS          14000  // 14 seconds window to allow 9 hits across 2-3 T3 cycles
+#define REQUIRED_HITS_FOR_ALERT      8      // 8 additional hits while suspected (total 9 hits)
 #define CLEAR_RESET_TIMEOUT_MS       10000  // 10 seconds of silence to reset to Clear
 
 // ==========================================
