@@ -32,6 +32,11 @@
 #define MIN_ALARM_RMS_THRESHOLD      400.0f // Filter human whistling/casual sounds, accept true siren SPL
 #define SUSPECTED_WINDOW_MS          16000  // 16 seconds window to allow hits across 2-3 T3 cycles
 #define REQUIRED_HITS_FOR_ALERT      12     // 12 additional hits while suspected (total 13 hits)
+#define REQUIRED_T3_CYCLES           2      // Minimum verified T3 cycles (triplet + 1.5s silence) for Alert
+#define T3_SHORT_GAP_MIN_MS          250    // Gap between beeps inside triplet (~500ms)
+#define T3_SHORT_GAP_MAX_MS          950
+#define T3_LONG_GAP_MIN_MS           1000   // Inter-burst pause between cycles (~1500ms)
+#define T3_LONG_GAP_MAX_MS           2600
 #define CLEAR_RESET_TIMEOUT_MS       10000  // 10 seconds of silence to reset to Clear
 
 // ==========================================

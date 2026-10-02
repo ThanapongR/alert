@@ -5,6 +5,8 @@ DetectorStateMachine::DetectorStateMachine()
       change_callback(nullptr),
       last_confidence(0.0f),
       consecutive_hits(0),
+      triplet_beeps(0),
+      t3_cycles(0),
       suspected_start_time(0),
       last_hit_time(0) {}
 
@@ -12,7 +14,10 @@ void DetectorStateMachine::begin(StateChangeCallback on_change) {
     this->change_callback = on_change;
     this->current_state = STATE_CLEAR;
     this->consecutive_hits = 0;
+    this->triplet_beeps = 0;
+    this->t3_cycles = 0;
     this->last_confidence = 0.0f;
+    this->last_hit_time = 0;
 }
 
 const char* DetectorStateMachine::getStateString() const {
@@ -39,32 +44,53 @@ void DetectorStateMachine::processInference(float fire_alarm_confidence) {
     last_confidence = fire_alarm_confidence;
 
     if (fire_alarm_confidence >= CONFIDENCE_THRESHOLD) {
+        unsigned long gap = (last_hit_time > 0) ? (now - last_hit_time) : 0;
         last_hit_time = now;
+
+        // T3 Cadence Analysis:
+        // Gap < 250ms: Continuous beep slice (same burst)
+        // Gap 250ms - 950ms: Next beep in triplet (~0.5s silence)
+        // Gap 1000ms - 2600ms: Inter-burst pause (~1.5s silence)
+        if (gap >= T3_SHORT_GAP_MIN_MS && gap <= T3_SHORT_GAP_MAX_MS) {
+            triplet_beeps++;
+        } else if (gap >= T3_LONG_GAP_MIN_MS && gap <= T3_LONG_GAP_MAX_MS) {
+            if (triplet_beeps >= 2) {
+                t3_cycles++;
+                Serial.printf("\n🔔 >>> [T3 CADENCE VERIFIED] Cycle %u/%u detected! <<<\n\n", 
+                              t3_cycles, REQUIRED_T3_CYCLES);
+            }
+            triplet_beeps = 1;
+        } else if (gap > T3_LONG_GAP_MAX_MS) {
+            triplet_beeps = 1;
+        }
 
         switch (current_state) {
             case STATE_CLEAR:
-                // First hit: transition to Suspected and start debounce window
+                // First hit: transition to Suspected
                 consecutive_hits = 1;
+                triplet_beeps = 1;
+                t3_cycles = 0;
                 suspected_start_time = now;
                 transitionTo(STATE_SUSPECTED, fire_alarm_confidence);
                 break;
 
             case STATE_SUSPECTED:
                 consecutive_hits++;
-                // Check if hits occurred within the allowed window
+                // Verify within window: requires both total hits and 2 verified T3 cycles
                 if ((now - suspected_start_time) <= SUSPECTED_WINDOW_MS) {
-                    if (consecutive_hits >= (1 + REQUIRED_HITS_FOR_ALERT)) {
+                    if (consecutive_hits >= (1 + REQUIRED_HITS_FOR_ALERT) && t3_cycles >= REQUIRED_T3_CYCLES) {
                         transitionTo(STATE_ALERT, fire_alarm_confidence);
                     }
                 } else {
-                    // Window expired, reset window from this new hit
+                    // Window expired without reaching full Alert, reset window
                     consecutive_hits = 1;
+                    triplet_beeps = 1;
+                    t3_cycles = 0;
                     suspected_start_time = now;
                 }
                 break;
 
             case STATE_ALERT:
-                // Already in alert, refresh hit time
                 consecutive_hits++;
                 break;
         }
@@ -76,9 +102,11 @@ void DetectorStateMachine::update() {
 
     switch (current_state) {
         case STATE_SUSPECTED:
-            // If suspected window elapsed without reaching required hits for Alert -> reset to Clear
+            // If suspected window elapsed without completing T3 cycles -> reset to Clear
             if ((now - suspected_start_time) > SUSPECTED_WINDOW_MS) {
                 consecutive_hits = 0;
+                triplet_beeps = 0;
+                t3_cycles = 0;
                 transitionTo(STATE_CLEAR, last_confidence);
             }
             break;
@@ -87,6 +115,8 @@ void DetectorStateMachine::update() {
             // If silence timeout elapsed without any new hit -> reset to Clear
             if ((now - last_hit_time) > CLEAR_RESET_TIMEOUT_MS) {
                 consecutive_hits = 0;
+                triplet_beeps = 0;
+                t3_cycles = 0;
                 transitionTo(STATE_CLEAR, 0.0f);
             }
             break;

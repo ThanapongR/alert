@@ -27,6 +27,7 @@ public:
     const char* getStateString() const;
     float getLastConfidence() const { return last_confidence; }
     uint32_t getConsecutiveHits() const { return consecutive_hits; }
+    uint32_t getT3Cycles() const { return t3_cycles; }
 
 private:
     SystemState current_state;
@@ -34,6 +35,8 @@ private:
 
     float last_confidence;
     uint32_t consecutive_hits;
+    uint32_t triplet_beeps;
+    uint32_t t3_cycles;
     unsigned long suspected_start_time;
     unsigned long last_hit_time;
 
