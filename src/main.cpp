@@ -51,10 +51,15 @@ void loop() {
     led.update();
     mqtt.loop();
 
-    // If network drops, reflect in LED
-    if (!mqtt.isConnected()) {
+    // Maintain LED status based on priority: ALERT > SUSPECTED > CONNECTING > CLEAR
+    SystemState current_state = state_machine.getCurrentState();
+    if (current_state == STATE_ALERT) {
+        led.setMode(LED_MODE_ALERT);
+    } else if (current_state == STATE_SUSPECTED) {
+        led.setMode(LED_MODE_SUSPECTED);
+    } else if (!mqtt.isConnected()) {
         led.setMode(LED_MODE_CONNECTING);
-    } else if (state_machine.getCurrentState() == STATE_CLEAR) {
+    } else {
         led.setMode(LED_MODE_CLEAR);
     }
 

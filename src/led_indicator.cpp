@@ -1,65 +1,58 @@
 #include "led_indicator.h"
 
 LedIndicator::LedIndicator()
-    : current_mode(LED_MODE_CONNECTING),
-      last_toggle(0),
-      led_state(false) {}
+    : current_mode(LED_MODE_CONNECTING), last_toggle(0), led_state(false) {}
 
 void LedIndicator::begin() {
-    pinMode(STATUS_LED_PIN, OUTPUT);
-    setLed(false);
+  pinMode(STATUS_LED_PIN, OUTPUT);
+  setLed(false);
 }
 
 void LedIndicator::setLed(bool on) {
-    led_state = on;
-    digitalWrite(STATUS_LED_PIN, on ? LED_ACTIVE_LEVEL : !LED_ACTIVE_LEVEL);
+  led_state = on;
+  digitalWrite(STATUS_LED_PIN, on ? LED_ACTIVE_LEVEL : !LED_ACTIVE_LEVEL);
 }
 
 void LedIndicator::setMode(LedMode mode) {
-    if (current_mode != mode) {
-        current_mode = mode;
-        last_toggle = millis();
-        if (mode == LED_MODE_ALERT) {
-            setLed(true);
-        } else if (mode == LED_MODE_CLEAR) {
-            setLed(false);
-        }
+  if (current_mode != mode) {
+    current_mode = mode;
+    last_toggle = millis();
+    if (mode == LED_MODE_ALERT) {
+      setLed(true);
+    } else if (mode == LED_MODE_CLEAR) {
+      setLed(false);
     }
+  }
 }
 
 void LedIndicator::update() {
-    unsigned long now = millis();
+  unsigned long now = millis();
 
-    switch (current_mode) {
-        case LED_MODE_CONNECTING:
-            // Slow blink (1 Hz): 500ms on, 500ms off
-            if (now - last_toggle >= 500) {
-                last_toggle = now;
-                setLed(!led_state);
-            }
-            break;
-
-        case LED_MODE_CLEAR:
-            // Heartbeat: briefly flash for 50ms every 5 seconds
-            if ((now - last_toggle) >= 5000) {
-                last_toggle = now;
-                setLed(true);
-            } else if (led_state && (now - last_toggle) >= 50) {
-                setLed(false);
-            }
-            break;
-
-        case LED_MODE_SUSPECTED:
-            // Fast blink (5 Hz): 100ms on, 100ms off
-            if (now - last_toggle >= 100) {
-                last_toggle = now;
-                setLed(!led_state);
-            }
-            break;
-
-        case LED_MODE_ALERT:
-            // Solid ON
-            setLed(true);
-            break;
+  switch (current_mode) {
+  case LED_MODE_CONNECTING:
+    // Slow blink (1 Hz): 500ms on, 500ms off
+    if (now - last_toggle >= 500) {
+      last_toggle = now;
+      setLed(!led_state);
     }
+    break;
+
+  case LED_MODE_CLEAR:
+    // Completely OFF when Clear
+    setLed(false);
+    break;
+
+  case LED_MODE_SUSPECTED:
+    // Fast blink (5 Hz): 100ms on, 100ms off
+    if (now - last_toggle >= 100) {
+      last_toggle = now;
+      setLed(!led_state);
+    }
+    break;
+
+  case LED_MODE_ALERT:
+    // Solid ON
+    setLed(true);
+    break;
+  }
 }
