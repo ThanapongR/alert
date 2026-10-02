@@ -100,34 +100,76 @@ float AudioInfer::runInference() {
     size_t samples_read = bytes_read / sizeof(int32_t);
     int64_t sum_squares = 0;
 
+#if HAS_EDGE_IMPULSE
+    float detected_fire_conf = -1.0f;
+
+    for (size_t i = 0; i < samples_read; i++) {
+        int16_t sample16 = (int16_t)(raw_i2s_buffer[i] >> 14);
+        sum_squares += (int32_t)sample16 * (int32_t)sample16;
+
+        if (sample_buffer && sample_buffer_idx < EI_CLASSIFIER_RAW_SAMPLE_COUNT) {
+            sample_buffer[sample_buffer_idx++] = sample16;
+        }
+
+        // Full window reached (1,000 ms)
+        if (sample_buffer && sample_buffer_idx >= EI_CLASSIFIER_RAW_SAMPLE_COUNT) {
+            current_rms = sqrtf((float)sum_squares / (i + 1));
+
+            signal_t signal;
+            signal.total_length = EI_CLASSIFIER_RAW_SAMPLE_COUNT;
+            signal.get_data = &audio_signal_get_data;
+
+            ei_impulse_result_t ei_result = { 0 };
+            EI_IMPULSE_ERROR r = run_classifier(&signal, &ei_result, false);
+
+            // Slide window by stride (250 ms = 4,000 samples)
+            const size_t stride_samples = AUDIO_SAMPLE_RATE / 4;
+            memmove(sample_buffer, &sample_buffer[stride_samples], (EI_CLASSIFIER_RAW_SAMPLE_COUNT - stride_samples) * sizeof(signed short));
+            sample_buffer_idx = EI_CLASSIFIER_RAW_SAMPLE_COUNT - stride_samples;
+
+            if (r == EI_IMPULSE_OK) {
+                float fire_conf = 0.0f;
+                float ambient_conf = 0.0f;
+                float noise_conf = 0.0f;
+
+                for (size_t ix = 0; ix < EI_CLASSIFIER_LABEL_COUNT; ix++) {
+                    if (strcmp(ei_result.classification[ix].label, "fire_alarm_t3") == 0) {
+                        fire_conf = ei_result.classification[ix].value;
+                    } else if (strcmp(ei_result.classification[ix].label, "ambient_beeps") == 0) {
+                        ambient_conf = ei_result.classification[ix].value;
+                    } else if (strcmp(ei_result.classification[ix].label, "background_noise") == 0) {
+                        noise_conf = ei_result.classification[ix].value;
+                    }
+                }
+
+                // Energy Gating: Real fire alarms are >85dB (RMS > 1500).
+                // Reject mechanical table thuds, taps, and quiet noises.
+                if (current_rms < MIN_ALARM_RMS_THRESHOLD) {
+                    fire_conf = 0.0f;
+                }
+
+                // Live Console Output for user testing!
+                Serial.printf("[Infer %d ms] Fire T3: %.2f | Beeps: %.2f | Noise: %.2f | RMS: %.0f %s\n",
+                              ei_result.timing.classification, fire_conf, ambient_conf, noise_conf, current_rms,
+                              (current_rms < MIN_ALARM_RMS_THRESHOLD ? "(Gate: Low RMS)" : ""));
+
+                detected_fire_conf = fire_conf;
+
+            }
+        }
+    }
+
+    if (detected_fire_conf >= 0.0f) {
+        return detected_fire_conf;
+    }
+#else
     for (size_t i = 0; i < samples_read; i++) {
         int16_t sample16 = (int16_t)(raw_i2s_buffer[i] >> 14);
         sum_squares += (int32_t)sample16 * (int32_t)sample16;
     }
-
-    // Compute RMS
     current_rms = sqrtf((float)sum_squares / samples_read);
-
-#if HAS_EDGE_IMPULSE
-    // Fill audio buffer and run Edge Impulse classifier
-    signal_t signal;
-    signal.total_length = EI_CLASSIFIER_RAW_SAMPLE_COUNT;
-    signal.get_data = &audio_signal_get_data;
-
-    // In full continuous mode, run_classifier returns results
-    ei_impulse_result_t ei_result = { 0 };
-    EI_IMPULSE_ERROR r = run_classifier(&signal, &ei_result, false);
-    if (r != EI_IMPULSE_OK) {
-        return -1.0f;
-    }
-
-    // Search for fire_alarm_t3 class confidence
-    for (size_t ix = 0; ix < EI_CLASSIFIER_LABEL_COUNT; ix++) {
-        if (strcmp(ei_result.classification[ix].label, "fire_alarm_t3") == 0) {
-            return ei_result.classification[ix].value;
-        }
-    }
 #endif
 
     return -1.0f;
 }
+

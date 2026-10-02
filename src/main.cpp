@@ -11,7 +11,10 @@ static MqttHaManager mqtt;
 static AudioInfer audio;
 
 void onStateChange(SystemState old_state, SystemState new_state, float confidence) {
-    Serial.printf("[MAIN] State Transition: %d -> %d (Confidence: %.2f)\n", old_state, new_state, confidence);
+    const char* old_s = (old_state == STATE_CLEAR ? "CLEAR" : (old_state == STATE_SUSPECTED ? "SUSPECTED" : "ALERT"));
+    const char* new_s = (new_state == STATE_CLEAR ? "CLEAR" : (new_state == STATE_SUSPECTED ? "SUSPECTED" : "ALERT"));
+    Serial.printf("\n🚨 >>> [STATE TRANSITION] %s -> %s (Confidence: %.2f, Hits: %u) <<<\n\n", 
+                  old_s, new_s, confidence, state_machine.getConsecutiveHits());
 
     // Update LED mode
     switch (new_state) {
@@ -23,6 +26,7 @@ void onStateChange(SystemState old_state, SystemState new_state, float confidenc
     // Publish state to Home Assistant
     mqtt.publishState(new_state, confidence, state_machine.getConsecutiveHits());
 }
+
 
 void setup() {
     Serial.begin(115200);

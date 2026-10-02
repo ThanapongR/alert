@@ -26,11 +26,12 @@
 #define AUDIO_BUFFER_SIZE  1024
 
 // ==========================================
-// Dual-stage State Machine Parameters
+// Dual-stage State Machine & Gating Parameters
 // ==========================================
 #define CONFIDENCE_THRESHOLD         0.85f
-#define SUSPECTED_WINDOW_MS          6000   // 6 seconds window to confirm alert
-#define REQUIRED_HITS_FOR_ALERT      2      // Additional hits needed while suspected (total 3)
+#define MIN_ALARM_RMS_THRESHOLD      350.0f // Rejects low-energy noise (<350 RMS); accepts alarms (>350 RMS)
+#define SUSPECTED_WINDOW_MS          8000   // 8 seconds window to fit 5 hits across 2 T3 cycles
+#define REQUIRED_HITS_FOR_ALERT      4      // 4 additional hits while suspected (total 5 hits)
 #define CLEAR_RESET_TIMEOUT_MS       10000  // 10 seconds of silence to reset to Clear
 
 // ==========================================
