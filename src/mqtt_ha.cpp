@@ -57,14 +57,15 @@ bool MqttHaManager::connectMqtt() {
 void MqttHaManager::publishDiscovery() {
     Serial.println("[HA] Publishing MQTT Auto-Discovery topics...");
 
-    // 1. Binary Sensor (Smoke Alarm)
+    // 1. Binary Sensor (Alarm)
     {
         JsonDocument doc;
-        doc["name"] = "Fire Alarm";
+        doc["name"] = "Alarm";
+        doc["has_entity_name"] = true;
         doc["unique_id"] = String(DEVICE_ID) + "_alarm";
         doc["state_topic"] = TOPIC_STATE;
-        doc["value_template"] = "{{ 'ON' if value_json.state == 'alert' else 'OFF' }}";
-        doc["device_class"] = "smoke";
+        doc["value_template"] = "{{ 'ON' if value_json.state == 'Alert' else 'OFF' }}";
+        doc["device_class"] = "safety";
         doc["availability_topic"] = TOPIC_AVAILABILITY;
         doc["payload_available"] = "online";
         doc["payload_not_available"] = "offline";
@@ -86,12 +87,13 @@ void MqttHaManager::publishDiscovery() {
     // 2. Sensor (State & Diagnostics)
     {
         JsonDocument doc;
-        doc["name"] = "Detector State";
+        doc["name"] = "State";
+        doc["has_entity_name"] = true;
         doc["unique_id"] = String(DEVICE_ID) + "_state";
         doc["state_topic"] = TOPIC_STATE;
         doc["value_template"] = "{{ value_json.state }}";
         doc["json_attributes_topic"] = TOPIC_ATTRIBUTES;
-        doc["icon"] = "mdi:fire-alert";
+        doc["icon"] = "mdi:bell-alert";
         doc["availability_topic"] = TOPIC_AVAILABILITY;
         doc["payload_available"] = "online";
         doc["payload_not_available"] = "offline";
@@ -99,6 +101,10 @@ void MqttHaManager::publishDiscovery() {
         JsonObject dev = doc["device"].to<JsonObject>();
         JsonArray ids = dev["identifiers"].to<JsonArray>();
         ids.add(DEVICE_ID);
+        dev["name"] = DEVICE_NAME;
+        dev["model"] = DEVICE_MODEL;
+        dev["manufacturer"] = DEVICE_MANUFACTURER;
+        dev["sw_version"] = SW_VERSION;
 
         char buffer[768];
         serializeJson(doc, buffer);
@@ -110,9 +116,9 @@ void MqttHaManager::publishDiscovery() {
 void MqttHaManager::publishState(SystemState state, float confidence, uint32_t hits) {
     if (!mqttClient.connected()) return;
 
-    const char* state_str = "clear";
-    if (state == STATE_SUSPECTED) state_str = "suspected";
-    else if (state == STATE_ALERT) state_str = "alert";
+    const char* state_str = "Clear";
+    if (state == STATE_SUSPECTED) state_str = "Suspected";
+    else if (state == STATE_ALERT) state_str = "Alert";
 
     // Publish state payload
     JsonDocument state_doc;

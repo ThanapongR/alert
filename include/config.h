@@ -37,8 +37,8 @@
 // ==========================================
 // Home Assistant MQTT Configuration
 // ==========================================
-#define DEVICE_ID             "xiao_smoke_detector"
-#define DEVICE_NAME           "Smoke Alarm Acoustic Detector"
+#define DEVICE_ID             "xiao_alarm_detector"
+#define DEVICE_NAME           "Alarm Detector"
 #define DEVICE_MANUFACTURER   "Seeed Studio / Edge Impulse"
 #define DEVICE_MODEL          "XIAO-ESP32S3-INMP441"
 #define SW_VERSION            "1.0.0"
