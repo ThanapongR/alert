@@ -125,3 +125,18 @@ void DetectorStateMachine::update() {
             break;
     }
 }
+
+float DetectorStateMachine::getAlertProgress() const {
+    if (current_state == STATE_CLEAR) return 0.0f;
+    if (current_state == STATE_ALERT) return 1.0f;
+
+    // Linear progress inside STATE_SUSPECTED based on hits and cycles verified
+    float hit_prog = (float)consecutive_hits / (float)(1 + REQUIRED_HITS_FOR_ALERT);
+    float cycle_prog = (float)t3_cycles / (float)REQUIRED_T3_CYCLES;
+    
+    // Balanced combination of hit count and T3 cycle cadence
+    float prog = 0.5f * hit_prog + 0.5f * cycle_prog;
+    if (prog < 0.0f) return 0.0f;
+    if (prog > 1.0f) return 1.0f;
+    return prog;
+}

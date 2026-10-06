@@ -19,7 +19,10 @@ void onStateChange(SystemState old_state, SystemState new_state, float confidenc
     // Update LED mode
     switch (new_state) {
         case STATE_CLEAR:     led.setMode(LED_MODE_CLEAR); break;
-        case STATE_SUSPECTED: led.setMode(LED_MODE_SUSPECTED); break;
+        case STATE_SUSPECTED: 
+            led.setMode(LED_MODE_SUSPECTED); 
+            led.setSuspectedProgress(state_machine.getAlertProgress());
+            break;
         case STATE_ALERT:     led.setMode(LED_MODE_ALERT); break;
     }
 
@@ -57,6 +60,7 @@ void loop() {
         led.setMode(LED_MODE_ALERT);
     } else if (current_state == STATE_SUSPECTED) {
         led.setMode(LED_MODE_SUSPECTED);
+        led.setSuspectedProgress(state_machine.getAlertProgress());
     } else if (!mqtt.isConnected()) {
         led.setMode(LED_MODE_CONNECTING);
     } else {

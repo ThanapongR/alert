@@ -16,12 +16,14 @@ public:
     LedIndicator();
     void begin();
     void setMode(LedMode mode);
+    void setSuspectedProgress(float progress);
     void update();
 
 private:
     LedMode current_mode;
     unsigned long last_toggle;
     bool led_state;
+    float suspected_progress;
 
     void setLed(bool on);
 };

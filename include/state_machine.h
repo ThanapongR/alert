@@ -28,6 +28,7 @@ public:
     float getLastConfidence() const { return last_confidence; }
     uint32_t getConsecutiveHits() const { return consecutive_hits; }
     uint32_t getT3Cycles() const { return t3_cycles; }
+    float getAlertProgress() const;
 
 private:
     SystemState current_state;

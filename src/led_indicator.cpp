@@ -1,7 +1,7 @@
 #include "led_indicator.h"
 
 LedIndicator::LedIndicator()
-    : current_mode(LED_MODE_CONNECTING), last_toggle(0), led_state(false) {}
+    : current_mode(LED_MODE_CONNECTING), last_toggle(0), led_state(false), suspected_progress(0.0f) {}
 
 void LedIndicator::begin() {
   pinMode(STATUS_LED_PIN, OUTPUT);
@@ -21,8 +21,13 @@ void LedIndicator::setMode(LedMode mode) {
       setLed(true);
     } else if (mode == LED_MODE_CLEAR) {
       setLed(false);
+      suspected_progress = 0.0f;
     }
   }
+}
+
+void LedIndicator::setSuspectedProgress(float progress) {
+  suspected_progress = (progress < 0.0f) ? 0.0f : ((progress > 1.0f) ? 1.0f : progress);
 }
 
 void LedIndicator::update() {
@@ -42,13 +47,15 @@ void LedIndicator::update() {
     setLed(false);
     break;
 
-  case LED_MODE_SUSPECTED:
-    // Fast blink (5 Hz): 100ms on, 100ms off
-    if (now - last_toggle >= 100) {
+  case LED_MODE_SUSPECTED: {
+    // Dynamic linear acceleration: from 350ms (slow warning) down to 40ms (fast frenzy) as confidence builds up
+    unsigned long interval = 350 - (unsigned long)(suspected_progress * 310.0f);
+    if (now - last_toggle >= interval) {
       last_toggle = now;
       setLed(!led_state);
     }
     break;
+  }
 
   case LED_MODE_ALERT:
     // Solid ON
