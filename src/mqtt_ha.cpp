@@ -64,7 +64,7 @@ void MqttHaManager::publishDiscovery() {
         doc["has_entity_name"] = true;
         doc["unique_id"] = String(DEVICE_ID) + "_alarm";
         doc["state_topic"] = TOPIC_STATE;
-        doc["value_template"] = "{{ 'ON' if value_json.state == 'Alert' else 'OFF' }}";
+        doc["value_template"] = "{{ 'ON' if value_json.state == 'alert' else 'OFF' }}";
         doc["device_class"] = "safety";
         doc["availability_topic"] = TOPIC_AVAILABILITY;
         doc["payload_available"] = "online";
@@ -116,9 +116,9 @@ void MqttHaManager::publishDiscovery() {
 void MqttHaManager::publishState(SystemState state, float confidence, uint32_t hits) {
     if (!mqttClient.connected()) return;
 
-    const char* state_str = "Clear";
-    if (state == STATE_SUSPECTED) state_str = "Suspected";
-    else if (state == STATE_ALERT) state_str = "Alert";
+    const char* state_str = "clear";
+    if (state == STATE_SUSPECTED) state_str = "suspected";
+    else if (state == STATE_ALERT) state_str = "alert";
 
     // Publish state payload
     JsonDocument state_doc;
