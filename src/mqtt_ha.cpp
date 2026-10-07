@@ -18,6 +18,7 @@ void MqttHaManager::connectWifi() {
 
     Serial.printf("[WiFi] Connecting to %s...\n", WIFI_SSID);
     WiFi.mode(WIFI_STA);
+    WiFi.setSleep(false); // Disable modem sleep to prevent RF power fluctuations into I2S mic
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 }
 

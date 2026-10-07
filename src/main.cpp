@@ -4,7 +4,6 @@
 #include "led_indicator.h"
 #include "mqtt_ha.h"
 #include "audio_infer.h"
-#include "audio_streamer.h"
 #include "ota_manager.h"
 
 static DetectorStateMachine state_machine;
@@ -49,15 +48,13 @@ void setup() {
     state_machine.begin(onStateChange);
     audio.begin();
     mqtt.begin();
-    audio_streamer.begin();
     ota_manager.begin();
 }
 
 void loop() {
-    // 1. Maintain LED, Network, Live Audio, and OTA loops
+    // 1. Maintain LED, Network, and OTA loops
     led.update();
     mqtt.loop();
-    audio_streamer.update();
     ota_manager.update();
 
     if (ota_manager.isUpdating()) {
