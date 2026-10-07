@@ -5,6 +5,7 @@
 #include "mqtt_ha.h"
 #include "audio_infer.h"
 #include "audio_streamer.h"
+#include "ota_manager.h"
 
 static DetectorStateMachine state_machine;
 static LedIndicator led;
@@ -49,13 +50,19 @@ void setup() {
     audio.begin();
     mqtt.begin();
     audio_streamer.begin();
+    ota_manager.begin();
 }
 
 void loop() {
-    // 1. Maintain LED, Network, and Live Audio Stream loops
+    // 1. Maintain LED, Network, Live Audio, and OTA loops
     led.update();
     mqtt.loop();
     audio_streamer.update();
+    ota_manager.update();
+
+    if (ota_manager.isUpdating()) {
+        return; // Temporarily yield CPU while new firmware is flashing
+    }
 
     // Maintain LED status based on priority: ALERT > SUSPECTED > CONNECTING > CLEAR
     SystemState current_state = state_machine.getCurrentState();
