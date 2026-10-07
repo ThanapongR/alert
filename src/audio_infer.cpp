@@ -1,4 +1,5 @@
 #include "audio_infer.h"
+#include "audio_streamer.h"
 #include <driver/i2s.h>
 #include <math.h>
 
@@ -99,12 +100,14 @@ float AudioInfer::runInference() {
 
     size_t samples_read = bytes_read / sizeof(int32_t);
     int64_t sum_squares = 0;
+    int16_t pcm_stream_buf[DMA_BUFFER_SAMPLES];
 
 #if HAS_EDGE_IMPULSE
     float detected_fire_conf = -1.0f;
 
     for (size_t i = 0; i < samples_read; i++) {
         int16_t sample16 = (int16_t)(raw_i2s_buffer[i] >> 14);
+        pcm_stream_buf[i] = sample16;
         sum_squares += (int32_t)sample16 * (int32_t)sample16;
 
         if (sample_buffer && sample_buffer_idx < EI_CLASSIFIER_RAW_SAMPLE_COUNT) {
@@ -157,6 +160,10 @@ float AudioInfer::runInference() {
 
             }
         }
+    }
+
+    if (audio_streamer.hasClient()) {
+        audio_streamer.broadcastAudio(pcm_stream_buf, samples_read);
     }
 
     if (detected_fire_conf >= 0.0f) {

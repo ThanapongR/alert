@@ -4,6 +4,7 @@
 #include "led_indicator.h"
 #include "mqtt_ha.h"
 #include "audio_infer.h"
+#include "audio_streamer.h"
 
 static DetectorStateMachine state_machine;
 static LedIndicator led;
@@ -47,12 +48,14 @@ void setup() {
     state_machine.begin(onStateChange);
     audio.begin();
     mqtt.begin();
+    audio_streamer.begin();
 }
 
 void loop() {
-    // 1. Maintain LED and Network loops
+    // 1. Maintain LED, Network, and Live Audio Stream loops
     led.update();
     mqtt.loop();
+    audio_streamer.update();
 
     // Maintain LED status based on priority: ALERT > SUSPECTED > CONNECTING > CLEAR
     SystemState current_state = state_machine.getCurrentState();
